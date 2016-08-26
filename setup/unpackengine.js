@@ -4,82 +4,94 @@ const rimraf = require('rimraf')
 const path = require('path')
 const fs = require('fs')
 const {js_beautify} = require('js-beautify')
-process.chdir(path.resolve(__dirname, '..'))
 
-let packageengine = fs.readFileSync('package/engine.js')
-let sandbox = {
-  __result: null,
-  Blob: function (d) {
-    let r = { source: d[0]}
-    let ind = r.source.indexOf('\n')
-    r.source = r.source.slice(ind)
-    beautify(r)
-    __result = r.source
-    return r
-  },
-  window: {
-    createObjectURL: (d) => d
+if (require.main == module)
+  run()
+else
+  module.exports = run
+
+function run(){
+  // let cwd = process.cwd()
+  process.chdir(__dirname)
+
+  let packageengine = fs.readFileSync(path.resolve('../package/engine.js'))
+  let sandbox = {
+    __result: null,
+    Blob: function (d) {
+      let r = { source: d[0]}
+      let ind = r.source.indexOf('\n')
+      r.source = r.source.slice(ind)
+      beautify(r)
+      __result = r.source
+      return r
+    },
+    window: {
+      createObjectURL: (d) => d
+    }
   }
-}
-packageengine += `; __result = globalWorkersBlob`
-let context = vm.createContext(sandbox)
-vm.runInContext(packageengine, sandbox)
-// console.log(require('util').inspect(sandbox))
-let rawengine = sandbox.__result
-// fs.writeFileSync('setup/engine.js', rawengine.source)
-// process.exit()
+  packageengine += `; __result = globalWorkersBlob`
+  let context = vm.createContext(sandbox)
+  vm.runInContext(packageengine, sandbox)
+  // console.log(require('util').inspect(sandbox))
+  let rawengine = sandbox.__result
+  // fs.writeFileSync('setup/engine.js', rawengine.source)
+  // process.exit()
 
-let rows = unpack(rawengine.source)
-// console.log(rows)
+  let rows = unpack(rawengine.source)
+  // console.log(rows)
 
-let idmap = []
+  let idmap = []
+  let stack = []
 
-let stack = []
-stack.push(path.resolve(__dirname, '../engine/entry'))
+  stack.push(path.resolve(__dirname, 'engine/entry'))
 
-rimraf.sync(path.resolve(__dirname, '../engine/.engine'))
-rimraf.sync(path.resolve(__dirname, '../engine/PathFinding.js'))
+  rimraf.sync(path.resolve(__dirname, 'engine/.engine'))
+  rimraf.sync(path.resolve(__dirname, 'PathFinding.js'))
 
-searchDeps(rows.find(r => r.entry).id, 'ENTRY', path.resolve(__dirname, '../engine/entry/index.js'))
+  searchDeps(rows.find(r => r.entry).id, 'ENTRY', path.resolve(__dirname, 'engine/entry/index.js'))
 
-function searchDeps (id, name, abspath, _r) {
-  _r = _r || 0
-  if (_r == 10) return
-  let r = rows.find(r => r.id == id)
-  r.path = abspath
-  r.name = name
-  console.log('Searching', id, name, _r)
-  for (let k in r.deps) {
-    let v = r.deps[k]
-    // console.log('dep', k, v)
-    // // let r = rows.find(r=>r.id == k)
-    // // r.name = r.deps[k]
-    let dir = path.dirname(k)
-    let name = path.basename(k)
-    let abs = path.resolve(stack[stack.length - 1], k)
-    // console.log('res', dir, name, abs)
-    stack.push(path.dirname(abs))
-    searchDeps(v, name, abs, _r + 1)
-    stack.pop()
-  }
-}
-
-Promise.all(rows.map(r => new Promise((resolve, reject) => {
-  let absdir = path.dirname(r.path)
-  let abs = r.path
-  require('child_process').exec(`mkdir -p ${absdir}`, (err, stdout, stderr) => {
-    console.log(stdout, stderr)
-    if (abs.slice(-2) != 'js') abs += '.js'
-    beautify(r)
-    // Attempt to find a require statement
-    requireFix(r)
-    fs.writeFile(abs, r.source, () => {
-      resolve()
+  return Promise.all(rows.map(r => new Promise((resolve, reject) => {
+    let absdir = path.dirname(r.path)
+    let abs = r.path
+    require('child_process').exec(`mkdir -p ${absdir}`, (err, stdout, stderr) => {
+      if (abs.slice(-2) != 'js') abs += '.js'
+      beautify(r)
+      // Attempt to find a require statement
+      requireFix(r)
+      fs.writeFile(abs, r.source, () => {
+        resolve()
+      })
     })
+  }))).then(() => {
+    rimraf.sync(path.resolve('../engine/.engine'))
+    rimraf.sync(path.resolve('../engine/PathFinding.js'))
+    fs.renameSync(path.resolve('PathFinding.js'), path.resolve('../engine/PathFinding.js'))
+    fs.renameSync(path.resolve('engine/.engine'), path.resolve('../engine/.engine'))
+    rimraf.sync(path.resolve('engine'))
   })
-}))).then(() => {
-  fs.renameSync(path.resolve('PathFinding.js'), path.resolve('engine/PathFinding.js'))
-})
+  function searchDeps (id, name, abspath, _r) {
+    _r = _r || 0
+    if (_r == 10) return
+    let r = rows.find(r => r.id == id)
+    r.path = abspath
+    r.name = name
+    // console.log('Searching', id, name, _r)
+    for (let k in r.deps) {
+      let v = r.deps[k]
+      // console.log('dep', k, v)
+      // // let r = rows.find(r=>r.id == k)
+      // // r.name = r.deps[k]
+      let dir = path.dirname(k)
+      let name = path.basename(k)
+      let abs = path.resolve(stack[stack.length - 1], k)
+      // console.log('res', dir, name, abs)
+      stack.push(path.dirname(abs))
+      searchDeps(v, name, abs, _r + 1)
+      stack.pop()
+    }
+  }
+}
+
 
 function requireFix (r) {
   r.source = `

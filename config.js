@@ -10,6 +10,9 @@ module.exports = {
     // only valid for localhost and my domain
     // Server side ignored currently ;)
     sitekey: '6LfxwycTAAAAADuiVXiBLAKmzaWVHeMsbsZkjwxv'
-  },
-  constants: require('./engine/.engine/game/constants.js')
+  }
 }
+
+try{
+  module.exports.constants = require('./engine/.engine/game/constants.js')
+}catch(e){}

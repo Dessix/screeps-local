@@ -114,9 +114,11 @@ function run () {
     .then(decompressPackage)
     .then(patch)
     .then(cleanup)
-    .then(() => console.log('All done!'))
+    .then(() => console.log('Package complete'))
     .catch((err) => console.error(err))
 }
 
 if (require.main == module)
   run()
+else
+  module.exports = run
