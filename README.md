@@ -4,6 +4,8 @@ This is still heavily WIP
 
 # Simple setup: 
 
+Node 6+ REQUIRED
+
 * Install mongodb
 * Install redis
 * Inside this repo:
