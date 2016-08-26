@@ -10,7 +10,7 @@ class ModuleWrapper {
     this.remap = []
     this.remap.push({
       regex: /PathFinding\.js/,
-      func: (fn) => fn.replace(/PathFinding\.js/, '/engine/PathFinding.js')
+      func: (fn) => fn.indexOf('engine') == -1 ? fn.replace(/PathFinding\.js/, 'engine/PathFinding.js') : fn
     })
     this.global = {
       name: name,

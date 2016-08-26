@@ -83,7 +83,6 @@ Promise.all(rows.map(r => new Promise((resolve, reject) => {
 
 function requireFix (r) {
   r.source = `
-  let self = global
   let a = require
   let b = module 
   let c = module.exports

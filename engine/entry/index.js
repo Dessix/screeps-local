@@ -1,5 +1,4 @@
 
-  let self = global
   let a = require
   let b = module 
   let c = module.exports
