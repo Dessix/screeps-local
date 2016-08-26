@@ -41,6 +41,7 @@ app.use((req, res, next) => {
   })
 })
 
+app.use('/setup', require('./setup'))
 app.use('/leaderboard', require('./leaderboard'))
 app.use('/game', require('./game'))
 app.use('/user', require('./user'))

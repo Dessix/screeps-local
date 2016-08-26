@@ -19,7 +19,8 @@ app.get('/messages/unread-count', (req, res) => {
 })
 
 app.get('/world-status', (req, res) => {
-  res.success({ status: 'empty' })
+  if (!req.user) res.end(401)
+  res.success({ status: req.user.worldStatus || 'empty' })
 })
 
 app.get('/world-start-room', (req, res) => res.success({'ok': 1,'room': ['E5S5']}))

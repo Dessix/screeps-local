@@ -36,6 +36,7 @@ app.post('/room-update', bodyParser.json(), (req, res) => {
 })
 
 app.use(express.static('public'))
+app.use(express.static('package'))
 app.use('/api', require('./routes/api'))
 
 app.post('/memory', bodyParser.json(), (req, res) => {

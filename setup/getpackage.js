@@ -7,6 +7,7 @@ const crypto = require('crypto')
 const request = require('request')
 const decompress = require('decompress')
 const decompressUnzip = require('decompress-unzip')
+const config = require('../config')
 
 function getVersion (opts) {
   return new Promise((resolve, reject) => {
@@ -89,6 +90,18 @@ function cleanup (opts) {
   })
 }
 
+function patch (opts) {
+  return new Promise((resolve, reject) => {
+    let file = path.join(opts.pkgdir, 'build.min.js')
+    let data = fs.readFileSync(file)
+    data = data.toString()
+    data = data.replace(/https:\/\/screeps.com/g, '')
+    data = data.replace(/sitekey:".+?"/, `sitekey: "${config.recaptcha.sitekey}"`)
+    fs.writeFileSync(file, data)
+    resolve(opts)
+  })
+}
+
 function run () {
   let dbg = (opts) => {
     console.log(opts); return opts}
@@ -99,6 +112,7 @@ function run () {
     // .then(dbg)
     .then(removeExisting)
     .then(decompressPackage)
+    .then(patch)
     .then(cleanup)
     .then(() => console.log('All done!'))
     .catch((err) => console.error(err))

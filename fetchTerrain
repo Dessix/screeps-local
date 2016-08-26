@@ -1,8 +1,0 @@
-
-for X in {0..10}; do
-	for Y in {0..10}; do
-		N="E"$X"S"$Y
-		#curl "https://screeps.com/api/game/room-terrain?encoded=true&room="$N -H 'X-Token: cfed5729770e928121ab113bb404968e02460f52' -H 'X-Username: cfed5729770e928121ab113bb404968e02460f52' > terrain/$N.json
-		curl "http://localhost:8082/api/addroom?room="$N
-	done
-done
