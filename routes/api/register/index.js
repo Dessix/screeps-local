@@ -34,6 +34,7 @@ app.post('/submit', (req, res) => {
     delete user.recaptcha
     req.db.users.ensureIndex({ fieldName: 'email', unique: true })
     req.db.users.ensureIndex({ fieldName: 'username', unique: true })
+    user.worldStatus = 'empty'
     req.db.users.insert(user)
     res.success()
   })

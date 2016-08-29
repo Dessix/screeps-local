@@ -90,7 +90,7 @@ class Core extends EventEmitter {
           arr[i] = Number(t.terrain.charAt(i))
         return { room: t.room, terrain: arr }
       }).reduce((l, v) => (l[v.room] = v.terrain, l), {})
-      let consoleCommands = usersCode.consoleCommands
+      let consoleCommands = usersCode && usersCode.consoleCommands || []
       usersCode = usersCode.branches[0]
       let ret = {
         time: gametime,
