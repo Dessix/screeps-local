@@ -72,15 +72,15 @@ class Core extends EventEmitter {
   }
   getRuntimeData (id) {
     return Q.all([
-      db.users.find({}),
-      db.users.findOne({ _id: id }),
-      db.userCode.findOne({ _id: id }, { _id: 1, branches: { $elemMatch: { activeWorld: true }}}),
-      db.userMemory.findOne({ _id: id }),
-      db.rooms.find({}),
-      db.roomObjects.find({}),
-      db.roomTerrain.find({}),
-      db.roomFlags.find({ _id: id }),
-      db.transactions.find({}),
+      db.users.find({}).then(this.flattenIDs),
+      db.users.findOne({ _id: id }).then(this.flattenID),
+      db.userCode.findOne({ _id: id }, { _id: 1, branches: { $elemMatch: { activeWorld: true }}}).then(this.flattenID),
+      db.userMemory.findOne({ _id: id }).then(this.flattenID),
+      db.rooms.find({}).then(this.flattenIDs),
+      db.roomObjects.find({}).then(this.flattenIDs),
+      db.roomTerrain.find({}).then(this.flattenIDs),
+      db.roomFlags.find({ _id: id }).then(this.flattenIDs),
+      db.transactions.find({}).then(this.flattenIDs),
       this.getGameTime()
     ]).then(res => {
       let [users, user, usersCode, userMemory, rooms, roomsObjects, roomsTerrain, roomsFlags, transactions, gametime] = res
@@ -133,6 +133,7 @@ class Core extends EventEmitter {
   }
   getAllUsers () {
     return db.users.find({})
+      .then(this.flattenIDs)
   }
   restartAllRuntimes () {
     return Q.when(null)
@@ -233,21 +234,44 @@ class Core extends EventEmitter {
   //   resolve(Q.all(arr))
   // })
   }
+  flattenIDs (recs) {
+    for (let k in recs) {
+      let r = recs[k]
+      if (r._id && r._id.toHexString)
+        r._id = r._id.toHexString()
+      if (r.user && r.user.toHexString)
+        r.user = r.user.toHexString()
+    }
+    return recs
+  }
+  flattenID (r) {
+    if (!r) return r
+    if (r._id && r._id.toHexString)
+      r._id = r._id.toHexString()
+    if (r.user && r.user.toHexString)
+      r.user = r.user.toHexString()
+    return r
+  }
   getAllRooms () {
     return db.rooms.find({ status: { $ne: 'disabled' }})
+      .then(this.flattenIDs)
   }
   getRoomIntents (room) {
     return db.roomIntents.findOne({ room})
+      .then(this.flattenID)
   }
   getRoomObjects (room) {
     return db.roomObjects.find({ room})
+      .then(this.flattenIDs)
       .then(v => this.mapById(v))
   }
   getRoomFlags (room) {
     return db.roomFlags.find({ room})
+      .then(this.flattenIDs)
   }
   getRoomTerrain (room) {
     return db.roomTerrain.find({ room})
+      .then(this.flattenIDs)
       .then(v => this.mapById(v))
   }
   bulkObjectsWrite () {

@@ -26,6 +26,7 @@ class Runtime {
   }
   processUser (data) {
     if (!data.user) return
+    // console.log(data.roomObjects)
     let user = data.user
     this.checkObsolete(user._id, data.userCodeTimestamp)
     this.initGlobals(user._id)
@@ -71,30 +72,30 @@ class Runtime {
     return {
       list: {},
       set: function (oid, intent, params) {
-        console.log('set',oid,intent,params)
+        console.log('set', oid, intent, params)
         this.list[oid] = this.list[oid] || {}
         this.list[oid][intent] = params
       },
       push: function (intent, params, max) {
-        console.log('push',intent,params,max)
+        console.log('push', intent, params, max)
         this.list[intent] = this.list[intent] || []
-        if(this.list[intent].length >= max)
-          return false 
+        if (this.list[intent].length >= max)
+          return false
         this.list[intent].push(params)
         return true
       },
       pushByName: function (oid, intent, params, max) {
-        console.log('pushByName',oid, intent, params, max)
+        console.log('pushByName', oid, intent, params, max)
         this.list[oid] = this.list[oid] || {}
         this.list[oid][intent] = this.list[oid][intent] || []
-        if(max && this.list[oid][intent].length >= max)
+        if (max && this.list[oid][intent].length >= max)
           return false
         this.list[oid][intent].push(params)
         return true
       },
       remove: function (oid, intent) {
-        console.log('remove',oid, intent)
-        if(!this.list[oid][intent]) return false
+        console.log('remove', oid, intent)
+        if (!this.list[oid][intent]) return false
         delete this.list[oid][intent]
         return true
       }
