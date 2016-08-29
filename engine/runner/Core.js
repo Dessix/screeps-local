@@ -91,12 +91,17 @@ class Core extends EventEmitter {
         return { room: t.room, terrain: arr }
       }).reduce((l, v) => (l[v.room] = v.terrain, l), {})
       let consoleCommands = usersCode && usersCode.consoleCommands || []
-      usersCode = usersCode && usersCode.branches[0] || {}
+      usersCode = usersCode && usersCode.branches[0] || {
+        modules: {
+          main: 'module.exports.loop = function(){}'
+        },
+        timestamp: Date.now()
+      }
       let ret = {
         time: gametime,
         user: user,
         users: this.mapById(users),
-        userCode: usersCode.modules || { main: 'module.exports.loop = function(){}' },
+        userCode: usersCode.modules,
         userCodeTimestamp: usersCode && usersCode.timestamp || 0,
         userObjects: this.mapById(roomsObjects.filter(r => r.user == id)),
         roomObjects: this.mapById(roomsObjects),
