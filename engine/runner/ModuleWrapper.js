@@ -41,8 +41,7 @@ class ModuleWrapper {
       if (fn.slice(-1) == '/') fn += 'index.js'
       if (fn.slice(-3) != '.js') fn += '.js'
       // if (fn == '/home/adam/projects/node/screeps-sim/engine/.engine/game/rooms.js')
-      if (this.moduleCache[fn])
-        return this.moduleCache[fn]
+      /* START REMAPING */
       let remap = this.remap.find(r => r.regex.test(fn))
       if (remap) {
         if (remap.exports)
@@ -52,18 +51,23 @@ class ModuleWrapper {
         if (remap.func)
           fn = remap.func(fn)
       }
+      /* END REMAPING */
+      if (this.moduleCache[fn])
+        return this.moduleCache[fn].exports
+      let mod = new Proxy({}, {})
+      mod.exports = {}
+      this.moduleCache[fn] = mod
+
       let filename = fn
       let dirname = path.dirname(fn)
       let raw = fs.readFileSync(fn)
-      let code = `(function (exports, require, module, __filename, __dirname) { ${raw} })`
+      let code = `(function (require, exports, module, __filename, __dirname) { ${raw} })`
       let script = new vm.Script(code, {
         filename: filename,
         displayErrors: true
       })
-      let mod = { exports: {} }
       let require = (m) => this.vmrequire(m, dirname)
-      script.runInContext(this.context)(mod.exports, require, mod, filename, dirname)
-      this.moduleCache[fn] = mod.exports
+      script.runInContext(this.context)(require, mod.exports, mod, filename, dirname)
       return mod.exports
     }else {
       return require(module)

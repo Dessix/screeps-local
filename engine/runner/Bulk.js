@@ -47,7 +47,6 @@ class Bulk {
         }
       })))
       if (!arr.length) return Q.when()
-      console.log(JSON.stringify(arr, null, 2))
       return this.col.bulkWrite(arr)
         .then(res => {
           // console.log(res.toJSON())

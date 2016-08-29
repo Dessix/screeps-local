@@ -160,7 +160,6 @@ class Core extends EventEmitter {
     return db.userMemory.update({ _id: id }, {$set: {memory}})
   }
   saveUserIntents (id, roomintents) {
-    console.log(id, roomintents)
     return db.roomIntents.find().then(intents => {
       for (let k in roomintents) {
         if (k == 'notify') continue
@@ -358,7 +357,6 @@ class Core extends EventEmitter {
     return Q.when(null)
   }
   commitDbBulk (...a) {
-    console.log('commitDbBulk', ...a)
     return Q.when(null)
   }
   notifyTickStarted () {

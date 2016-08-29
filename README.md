@@ -19,8 +19,6 @@ http://localhost:8080/api/setup/add-room?room=E1S1
 
 # TODO
 * Better README
-* Fix creeps not moving
-* Fix spawns vanishing (Probably related to the creep issue)
 
 # Working:
 ## UI
@@ -39,4 +37,4 @@ http://localhost:8080/api/setup/add-room?room=E1S1
 * Adding certain objects (Flags, etc)
 
 ## Engine
-* Creep movement, they just never move, intents get added to DB and presumably processed, but no update
+* Unknown, feel free to submit an issue!

@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken')
 const NRP = require('node-redis-pubsub')
 let { jwtsecret } = require('./config')
 
+const Core = require('./engine/runner/Core.js')
+let core = new Core(1000)
+
 class API {
   constructor (conn, bus) {
     this.ps = new NRP({
