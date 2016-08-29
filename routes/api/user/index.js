@@ -19,7 +19,7 @@ app.get('/messages/unread-count', (req, res) => {
 })
 
 app.get('/world-status', (req, res) => {
-  if (!req.user) res.end(401)
+  if (!req.user) res.end('', 401)
   res.success({ status: req.user.worldStatus || 'empty' })
 })
 
