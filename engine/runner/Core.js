@@ -96,7 +96,7 @@ class Core extends EventEmitter {
         time: gametime,
         user: user,
         users: this.mapById(users),
-        userCode: usersCode.modules,
+        userCode: usersCode.modules || { main: 'module.exports.loop = function(){}' },
         userCodeTimestamp: usersCode && usersCode.timestamp || 0,
         userObjects: this.mapById(roomsObjects.filter(r => r.user == id)),
         roomObjects: this.mapById(roomsObjects),
