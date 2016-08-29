@@ -31,6 +31,7 @@ http://localhost:8080/api/setup/add-room?room=E1S1
 
 ## Engine
 * User code, all runs without issue (So far)
+* Initial spawn placement, may require setting worldStatus to 'empty' for the user int eh DB first.
 
 # Not Working:
 ## UI
@@ -39,4 +40,3 @@ http://localhost:8080/api/setup/add-room?room=E1S1
 
 ## Engine
 * Creep movement, they just never move, intents get added to DB and presumably processed, but no update
-* Spawns. They spontaneously vanish from the DB for unknown reasons

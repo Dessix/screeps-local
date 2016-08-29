@@ -38,7 +38,7 @@ function roomUpdate () {
     core.getAllRooms(),
     db.userMemory.find({}),
     core.getAllUsers(),
-    core.getRoomObjects()
+    db.roomObjects.find({})
   ]).then(res => {
     // console.log(res)
     let [gametime, rooms, memory, users, objects] = res
@@ -47,7 +47,7 @@ function roomUpdate () {
       let objs = {}
       for (let id in objects)
         if (objects[id].room == room._id)
-          objs[id] = objects[id]
+          objs[objects[id]._id] = objects[id]
       // objs = arrtoObj(objs)
       let roomState = {
         objects: objs,

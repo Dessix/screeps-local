@@ -237,17 +237,17 @@ class Core extends EventEmitter {
     return db.rooms.find({ status: { $ne: 'disabled' }})
   }
   getRoomIntents (room) {
-    return db.roomIntents.find({ room})
+    return db.roomIntents.findOne({ room})
   }
   getRoomObjects (room) {
-    return db.roomObjects.find({})
+    return db.roomObjects.find({ room})
       .then(v => this.mapById(v))
   }
-  getRoomFlags (a) {
-    return db.roomFlags.find({})
+  getRoomFlags (room) {
+    return db.roomFlags.find({ room})
   }
-  getRoomTerrain (a) {
-    return db.roomTerrain.find({})
+  getRoomTerrain (room) {
+    return db.roomTerrain.find({ room})
       .then(v => this.mapById(v))
   }
   bulkObjectsWrite () {

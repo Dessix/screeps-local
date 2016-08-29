@@ -111,7 +111,7 @@ app.post('/place-spawn', (req, res) => {
     spawning: null
   }
   Promise.all([
-    req.db.users.update({ _id: id }, { $set: { worldStatus: 'normal' }}),
+    req.db.users.update({ _id: req.user._id }, { $set: { worldStatus: 'normal' }}),
     req.db.roomObjects.update({ type: 'controller', room: s.room }, { $set: {
         progress: 0,
         ticksToDowngrade: C.CONTROLLER_DOWNGRADE[1],
