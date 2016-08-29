@@ -39,6 +39,25 @@ app.post('/submit', (req, res) => {
     user.cpu = 100
 
     req.db.users.insert(user)
+      .then(user => {
+        req.db.userCode.insert({
+          _id: user._id,
+          branches: [ {
+            'branch': 'default',
+            'activeSim': true,
+            'activeWorld': true,
+            'modules': {
+              'main': 'module.exports.loop = function(){ \n    console.log("tick",Game.time)\n}'
+            },
+            'timestamp': 1472045040380
+          } ],
+          consoleCommands: []
+        })
+        req.db.userMemory.insert({
+          _id: user._id,
+          memory: '{}'
+        })
+      })
     res.success()
   })
 })
