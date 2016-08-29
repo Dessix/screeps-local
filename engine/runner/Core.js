@@ -155,10 +155,13 @@ class Core extends EventEmitter {
           const Runtime = mod.start()
           this.runtime = new Runtime()
         }
-        let ret = this.runtime.processUser(rd)
-        ret.intents = utils.storeIntents(id, ret.intents, rd)
-        if (ret.error) throw ret.error
-        return ret
+        return Q.promise((resolve, reject) => {
+          let ret = this.runtime.processUser(rd)
+          ret.intents = utils.storeIntents(id, ret.intents, rd)
+          if (ret.error) return reject(ret.error) // throw ret.error
+          return resolve(ret)
+          return ret
+        })
       }).catch(err => console.error(err))
   }
   saveUserMemory (id, memory) {

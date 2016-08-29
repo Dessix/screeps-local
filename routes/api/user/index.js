@@ -86,11 +86,39 @@ app.post('/badge', (req, res) => {
 
 app.get('/memory', (req, res) => {
   let path = req.query.path.split('.')
-  let mem = req.user.memory
-  try {
-    while(path.length)
-    mem = mem[path.splice(0, 1)[0]]
-  } catch(e) {}
-  console.log(mem)
-  res.success({ memory: mem })
+  Promise.resolve()
+    .then(() => req.db.userMemory.findOne({ _id: req.user._id }))
+    .then(mem => JSON.parse(mem.memory))
+    .then(mem => {
+      let omem = mem
+      if (path[0] == '') path = []
+      try {
+        while(path.length)
+        mem = mem[path.splice(0, 1)[0]]
+      } catch(e) {}
+      return mem
+    })
+    .then(mem => res.success({ data: mem }))
+    .catch(err => console.error(err))
+})
+
+app.post('/memory', (req, res) => {
+  let path = req.body.path.split('.')
+  Promise.resolve()
+    .then(() => req.db.userMemory.findOne({ _id: req.user._id }))
+    .then(mem => JSON.parse(mem.memory))
+    .then(mem => {
+      let omem = mem
+      if (path[0] == '') return req.body.value
+      try {
+        while(path.length > 1)
+        mem = mem[path.splice(0, 1)[0]]
+        mem[path.splice(0, 1)[0]] = req.body.value
+      } catch(e) {}
+      return omem
+    })
+    .then(mem => JSON.stringify(mem))
+    .then(mem => (res.success({ data: mem }), mem))
+    .then(mem => req.db.userMemory.update({ _id: req.user._id }, { $set: { memory: mem }}))
+    .catch(err => console.error(err))
 })
