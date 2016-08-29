@@ -35,6 +35,9 @@ app.post('/submit', (req, res) => {
     req.db.users.ensureIndex({ fieldName: 'email', unique: true })
     req.db.users.ensureIndex({ fieldName: 'username', unique: true })
     user.worldStatus = 'empty'
+    user.subscription = true
+    user.cpu = 100
+
     req.db.users.insert(user)
     res.success()
   })
