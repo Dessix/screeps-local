@@ -11,7 +11,27 @@ app.use(jwt({
     return req.headers['x-token'] || null
   }
 }))
-app.use(bodyParser.json())
+app.use((req, res, next) => {
+  if (!req.headers.auth) return next()
+  let { email, password } = req.headers.auth.split(':')
+  req.db.users.findOne({ $or: [{ username: email }, { email}] }, (err, user) => {
+    if (err)   return res.end(err.stack, 500)
+    if (!user) return res.end('Unauthorized (User not found)', 401)
+    if (user) {
+      req.auth.verifyPassword(password, user.password, (err, valid) => {
+        if (valid) {
+          res.user = user
+          next()
+        }
+        else
+          res.end('Unauthorized (Bad password)', 401)
+      })
+    }
+  })
+})
+app.use(bodyParser.json({
+  limit: '100mb'
+}))
 
 app.use((req, res, next) => {
   res.success = function success (data) {
