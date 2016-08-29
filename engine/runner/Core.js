@@ -103,7 +103,7 @@ class Core extends EventEmitter {
         rooms: this.mapById(rooms),
         flags: roomsFlags,
         consoleCommands: consoleCommands || [],
-        userMemory: userMemory.memory,
+        userMemory: userMemory && userMemory.memory || { memory: '{}' },
         cpu: 300,
         games: {
           world: {
