@@ -47,6 +47,9 @@ class API {
     if (room)
       this.write(JSON.stringify([`room:${room}`, {'objects': {},'info': {'mode': 'world'},'gameTime': 1}]))
   }
+  unsubscribe(path){
+    this.ps.off(path)
+  }
   write (...a) {
     this.conn.write(...a)
   }

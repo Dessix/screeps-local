@@ -155,10 +155,13 @@ class Core extends EventEmitter {
           const Runtime = mod.start()
           this.runtime = new Runtime()
         }
-        let ret = this.runtime.processUser(rd)
-        ret.intents = utils.storeIntents(id, ret.intents, rd)
-        if (ret.error) throw ret.error
-        return ret
+        return Q.promise((resolve, reject) => {
+          let ret = this.runtime.processUser(rd)
+          ret.intents = utils.storeIntents(id, ret.intents, rd)
+          if (ret.error) return reject(ret.error) // throw ret.error
+          return resolve(ret)
+          return ret
+        })
       }).catch(err => console.error(err))
   }
   saveUserMemory (id, memory) {
@@ -392,9 +395,10 @@ class Core extends EventEmitter {
     for (var i in globals) scopeInject += i + ' = __globals.' + i + ', '
     module.name = module.name.replace(/[^a-zA-Z0-9_]+/g, '')
     try {
+      if(!returnValue) module.code = "'';"+module.code
       if ('__mainLoop' != module.name)
         module.code = `module.__initGlobals = function() { ${scopeInject.replace(/,/g, ";")} }; __result = ${module.code}`
-      let code = `(function __run_${module.name}(__globals){ var ${scopeInject}globals = undefined, __result = \n${module.code};\n return __result; \n}).call(global, globals);`
+      let code = `(function __run_${module.name}(__globals){ var ${scopeInject}globals = undefined, __result = \n${module.code};\n; return __result; \n}).call(global, globals);`
       let script = new vm.Script(code, {
         filename: module.name,
         displayErrors: true,
@@ -412,7 +416,7 @@ class Core extends EventEmitter {
       })
       if (returnValue) return ret
     } catch (e) {
-      console.error(e)
+      console.error('evalCode',e)
       if (e instanceof EvalCodeError) throw e
       throw new EvalCodeError(e.message)
     }

@@ -43,18 +43,38 @@ app.post('/map-stats', (req, res) => {
   let stats = {}
   let { rooms } = req.body
   // req.db.rooms.update({}, { $set: { novice: Date.now() }})
-  req.db.rooms.find({ _id: { $in: rooms }}, { _id: 1, status: 1, novice: 1, own: 1, castIds: false }, (err, rooms) => {
+  Promise.all([
+    req.db.rooms.find({ _id: { $in: rooms }}, { _id: 1, status: 1, novice: 1, own: 1, castIds: false }),
+    req.db.roomObjects.find({ type: 'controller', room: { $in: rooms }}),
+    req.db.users.find({},{ password: 0, badge: 1, username: 1 })
+  ]).then(result=>{
+    let [rooms, controllers, users] = result
+    users = users.map(u=>({
+      _id: u._id,
+      badge: u.badge,
+      username: u.username,
+    }))
+    rooms.forEach(room=>{
+      let con = controllers.find(c=>c.room == room._id)
+      if(!con) return
+      if(con.user){
+        room.own = {
+          level: con.level,
+          user: con.user.toString()
+        }
+      }
+    })
+    let userList = rooms.reduce((l,room)=>{
+      if(room.own) l[room.own.user] = users.find(u=>u._id.toString() == room.own.user)
+      return l
+    },{})
     let stats = {}
-    let userIDs = rooms.filter(s => s.own).map(s => s.own.user)
+    // let userIDs = rooms.filter(s => s.own).map(s => s.own.user)
     rooms.forEach(r => {
       stats[r._id] = r
     })
-    req.db.users.find({ _id: { $in: userIDs }}, { _id: 1, badge: 1, username: 1 }, (err, users) => {
-      let userList = {}
-      users.forEach(u => userList[u._id] = u)
-      res.success({'ok': 1,'gameTime': 1,'stats': stats, 'users': userList })
-    })
-  })
+    res.success({'ok': 1,'gameTime': 1,'stats': stats, 'users': userList })
+  }).catch(err=>res.end(err.stack,500))
 
 // {
 // 'E31S47': {
@@ -139,6 +159,28 @@ app.post('/add-object-intent', (req, res) => {
       resp.users[uid] = resp.users[uid] || { objects: {} }
       resp.users[uid].objects[b._id] = resp.users[uid].objects[b._id] || {}
       resp.users[uid].objects[b._id][b.name] = b.intent
+      return resp
+    })
+    .then(resp => req.db.roomIntents.update({ room: b.room }, {$set: resp}, {upsert: true}))
+    .then(resp => res.success({ result: resp }))
+    .catch(err => res.fail(err))
+})
+
+
+app.post('/create-construction', (req, res) => {
+  let uid = req.user._id
+  let b = req.body
+  b.roomName = b.room
+  b.user = uid
+  req.db.roomIntents.findOne({ room: b.room })
+    .then(resp => {
+      if (!resp)
+        resp = { room: b.room }
+      resp.users = resp.users || {}
+      resp.users[uid] = resp.users[uid] || { objects: {} }
+      resp.users[uid].objects.room = resp.users[uid].objects.room || {}
+      resp.users[uid].objects.room.createConstructionSite = resp.users[uid].objects.room.createConstructionSite || []
+      resp.users[uid].objects.room.createConstructionSite.push(b)
       return resp
     })
     .then(resp => req.db.roomIntents.update({ room: b.room }, {$set: resp}, {upsert: true}))

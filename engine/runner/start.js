@@ -24,6 +24,7 @@ let tickTimes = [0]
 core.on('roomsDone', () => {
   console.log('Rooms Done!')
   setTimeout(() => roomUpdate(), 0)
+  setTimeout(() => roomMapUpdate(), 0)
   let time = Date.now() - lastTick
   lastTick = Date.now()
   tickTimes.push(time)
@@ -60,6 +61,35 @@ function roomUpdate () {
       ps.emit(`room:${room._id}`, roomState)
     })
   }).catch(err => console.error(err))
+}
+
+function roomMapUpdate(){
+  return Promise.all([
+    core.getAllRooms(),
+    db.roomObjects.find({})
+  ]).then(res=>{
+    let [rooms,objects] = res
+    rooms.forEach(room => {
+      let objs = {}
+      for (let id in objects)
+        if (objects[id].room == room._id)
+          objs[objects[id]._id] = objects[id]
+      // objs = arrtoObj(objs)
+      let getType = (type)=>objects.filter(o=>o.room == room._id && o.type == type).map(o=>([o.x,o.y]))
+      let roomMap = {
+        w: getType('wall'),
+        r: getType('road'),
+        c: getType('creep'),
+        s: getType('source'),
+        m: getType('mineral'),
+        k: [],
+        pb: [],
+        p: []
+      }
+      // console.log('UPDATE', room._id, roomState)
+      ps.emit(`roomMap2:${room._id}`, roomMap)
+    }).catch(err => console.error(err))  //
+  })
 }
 
 function arrtoObj (arr) {

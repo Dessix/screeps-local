@@ -19,7 +19,7 @@ app.get('/messages/unread-count', (req, res) => {
 })
 
 app.get('/world-status', (req, res) => {
-  if (!req.user) res.end(401)
+  if (!req.user) return res.end('', 401)
   res.success({ status: req.user.worldStatus || 'empty' })
 })
 
@@ -65,9 +65,12 @@ app.get('/code', (req, res) => {
 })
 
 app.post('/code', (req, res) => {
+  if (!req.user) return res.end('Unauthorized - Maybe you forgot an auth token?', 401)
   let ret = {}
   req.db['users.code'].findOne({ _id: req.user._id }, (err, code) => {
-    if (err) res.fail()
+    if (err) return res.fail()
+    console.log(code)
+    code = code || { branches: [] }
     let b = code.branches.find(b => b.branch == req.body.branch)
     if (b) {
       b.modules = req.body.modules
@@ -75,22 +78,51 @@ app.post('/code', (req, res) => {
     }
     else
       code.branches.push({ branch: req.body.branch, modules: req.body.modules, activeSim: false, activeWorld: false, timestamp: Date.now() })
-    req.db['users.code'].update({ _id: req.user._id }, code, () => res.success())
+    req.db['users.code'].update({ _id: req.user._id }, code, { upsert: true }, () => res.success())
   })
 })
 
 app.post('/badge', (req, res) => {
+  req.body.badge._watching = false
   req.db.users.update({ _id: req.user._id }, { $set: { badge: req.body.badge }})
   res.success()
 })
 
 app.get('/memory', (req, res) => {
   let path = req.query.path.split('.')
-  let mem = req.user.memory
-  try {
-    while(path.length)
-    mem = mem[path.splice(0, 1)[0]]
-  } catch(e) {}
-  console.log(mem)
-  res.success({ memory: mem })
+  Promise.resolve()
+    .then(() => req.db.userMemory.findOne({ _id: req.user._id }))
+    .then(mem => JSON.parse(mem.memory))
+    .then(mem => {
+      let omem = mem
+      if (path[0] == '') path = []
+      try {
+        while(path.length)
+        mem = mem[path.splice(0, 1)[0]]
+      } catch(e) {}
+      return mem
+    })
+    .then(mem => res.success({ data: mem }))
+    .catch(err => console.error(err))
+})
+
+app.post('/memory', (req, res) => {
+  let path = req.body.path.split('.')
+  Promise.resolve()
+    .then(() => req.db.userMemory.findOne({ _id: req.user._id }))
+    .then(mem => JSON.parse(mem.memory))
+    .then(mem => {
+      let omem = mem
+      if (path[0] == '') return req.body.value
+      try {
+        while(path.length > 1)
+        mem = mem[path.splice(0, 1)[0]]
+        mem[path.splice(0, 1)[0]] = req.body.value
+      } catch(e) {}
+      return omem
+    })
+    .then(mem => JSON.stringify(mem))
+    .then(mem => (res.success({ data: mem }), mem))
+    .then(mem => req.db.userMemory.update({ _id: req.user._id }, { $set: { memory: mem }}))
+    .catch(err => console.error(err))
 })
