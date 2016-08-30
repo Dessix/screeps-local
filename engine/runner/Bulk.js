@@ -42,14 +42,18 @@ class Bulk {
         }
       })))
       arr.push(...this._remove.map(rec => ({
-        deleteOne: {
-          filter: { _id: rec._id }
+        updateOne: {
+          filter: { _id: rec},
+          update: { $set: { _remove: true }}
         }
       })))
       if (!arr.length) return Q.when()
+      if(this.colName == 'roomFlags')
+        arr.forEach(a=>console.log(a))
       return this.col.bulkWrite(arr)
         .then(res => {
-          // console.log(res.toJSON())
+          if(this.colName == 'roomFlags')
+            console.log(res.toJSON())
         })
         .catch(err => console.error(bulk, err))
     }).catch(err => console.error(bulk, err))

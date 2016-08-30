@@ -71,6 +71,7 @@ class Core extends EventEmitter {
     return db.users.findOne({ _id: id })
   }
   getRuntimeData (id) {
+    id = id.toString()
     return Q.all([
       db.users.find({}).then(this.flattenIDs),
       db.users.findOne({ _id: id }).then(this.flattenID),
@@ -79,7 +80,7 @@ class Core extends EventEmitter {
       db.rooms.find({}).then(this.flattenIDs),
       db.roomObjects.find({}).then(this.flattenIDs),
       db.roomTerrain.find({}).then(this.flattenIDs),
-      db.roomFlags.find({ _id: id }).then(this.flattenIDs),
+      db.roomFlags.find({ user: id }).then(this.flattenIDs),
       db.transactions.find({}).then(this.flattenIDs),
       this.getGameTime()
     ]).then(res => {
@@ -97,6 +98,7 @@ class Core extends EventEmitter {
         },
         timestamp: Date.now()
       }
+      console.log(user.username,roomsFlags)
       let ret = {
         time: gametime,
         user: user,

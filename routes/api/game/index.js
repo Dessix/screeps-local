@@ -18,6 +18,11 @@ app.post('/gen-unique-object-name', (req, res) => {
   res.success({ name})
 })
 
+app.post('/gen-unique-flag-name', (req, res) => {
+  let name = require('crypto').randomBytes(8).toString('hex')
+  res.success({ name})
+})
+
 app.post('/check-unique-object-name', (req, res) => {
   req.db.roomObjects.findOne({ type: req.body.type, user: req.user._id, name: req.body.name })
     .then(obj => {
@@ -168,7 +173,7 @@ app.post('/add-object-intent', (req, res) => {
 
 
 app.post('/create-construction', (req, res) => {
-  let uid = req.user._id
+  let uid = req.user._id.toString()
   let b = req.body
   b.roomName = b.room
   b.user = uid
@@ -181,6 +186,27 @@ app.post('/create-construction', (req, res) => {
       resp.users[uid].objects.room = resp.users[uid].objects.room || {}
       resp.users[uid].objects.room.createConstructionSite = resp.users[uid].objects.room.createConstructionSite || []
       resp.users[uid].objects.room.createConstructionSite.push(b)
+      return resp
+    })
+    .then(resp => req.db.roomIntents.update({ room: b.room }, {$set: resp}, {upsert: true}))
+    .then(resp => res.success({ result: resp }))
+    .catch(err => res.fail(err))
+})
+
+app.post('/create-flag', (req, res) => {
+  let uid = req.user._id.toString()
+  let b = req.body
+  b.roomName = b.room
+  b.user = uid
+  req.db.roomIntents.findOne({ room: b.room })
+    .then(resp => {
+      if (!resp)
+        resp = { room: b.room }
+      resp.users = resp.users || {}
+      resp.users[uid] = resp.users[uid] || { objects: {} }
+      resp.users[uid].objects.room = resp.users[uid].objects.room || {}
+      resp.users[uid].objects.room.createFlag = resp.users[uid].objects.room.createFlag || []
+      resp.users[uid].objects.room.createFlag.push(b)
       return resp
     })
     .then(resp => req.db.roomIntents.update({ room: b.room }, {$set: resp}, {upsert: true}))

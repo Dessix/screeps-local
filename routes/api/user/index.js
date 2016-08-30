@@ -65,7 +65,7 @@ app.get('/code', (req, res) => {
 })
 
 app.post('/code', (req, res) => {
-  if (!req.user) return res.end('Unauthorized - Maybe you forgot an auth token?', 401)
+  if (!req.user) return res.fail('Unauthorized - Maybe you forgot an auth token?', 401)
   let ret = {}
   req.db['users.code'].findOne({ _id: req.user._id }, (err, code) => {
     if (err) return res.fail()

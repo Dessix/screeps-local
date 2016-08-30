@@ -4,6 +4,10 @@ const Q = require('q')
 //   console.error(...a)
 //   return Q.___reject.apply(this, a)
 // }
+// const C = require('../.engine/game/constants.js')
+// C.UPGRADE_CONTROLLER_POWER *= 10
+// C.HARVEST_POWER *= 10
+// C.SOURCE_ENERGY_CAPACITY *= 10
 const Core = require('./Core')
 const NRP = require('node-redis-pubsub')
 let ps = new NRP({ port: 6379, scope: 'screeps-local' })
@@ -43,12 +47,17 @@ function roomUpdate () {
   ]).then(res => {
     // console.log(res)
     let [gametime, rooms, memory, users, objects] = res
+    objects.filter(o=>o && o._remove).forEach(o=>{
+      db.roomObjects.remove({ _id: o._id })
+    })
     // users = arrtoObj(users)
     rooms.forEach(room => {
       let objs = {}
-      for (let id in objects)
-        if (objects[id].room == room._id)
+      for (let id in objects){
+        if(objects[id] && objects[id]._remove) objects[id] = null
+        if (objects[id] && objects[id].room == room._id)
           objs[objects[id]._id] = objects[id]
+      }
       // objs = arrtoObj(objs)
       let roomState = {
         objects: objs,

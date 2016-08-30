@@ -11,25 +11,7 @@ app.use(jwt({
     return req.headers['x-token'] || null
   }
 }))
-app.use((req, res, next) => {
-  if (!req.headers.auth) return next()
-  let [ email, password ] = req.headers.auth.split(':')
-  console.log(email)
-  req.db.users.findOne({ $or: [{ username: email }, { email}] }, (err, user) => {
-    if (err)   return res.end(err.stack, 500)
-    if (!user) return res.end(`Unauthorized (User ${email} not found)`, 401)
-    if (user) {
-      req.auth.verifyPassword(password, user.password, (err, valid) => {
-        if (valid) {
-          req.user.user = user._id
-          next()
-        }
-        else
-          res.end('Unauthorized (Bad password)', 401)
-      })
-    }
-  })
-})
+
 app.use(bodyParser.json({
   limit: '100mb'
 }))
@@ -50,6 +32,28 @@ app.use((req, res, next) => {
   }
   next()
 })
+
+app.use((req, res, next) => {
+  if (!req.headers.authorization) return next()
+  let auth = new Buffer(req.headers.authorization.split(' ')[1],'base64').toString('ascii')
+  let [ email, password ] = auth.split(':')
+  console.log(email)
+  req.db.users.findOne({ $or: [{ username: email }, { email}] }, (err, user) => {
+    if (err)   return res.fail(err.stack, 500)
+    if (!user) return res.fail(`Unauthorized (User ${email} not found)`, 401)
+    if (user) {
+      req.auth.verifyPassword(password, user.password, (err, valid) => {
+        if (valid) {
+          req.user = { user: user._id }
+          next()
+        }
+        else
+          res.fail('Unauthorized (Bad password)', 401)
+      })
+    }
+  })
+})
+
 
 app.use((req, res, next) => {
   if (!req.user) return next()
