@@ -10,16 +10,32 @@ const Q = require('q')
 // C.SOURCE_ENERGY_CAPACITY *= 10
 const Core = require('./Core')
 const NRP = require('node-redis-pubsub')
-let ps = new NRP({ port: 6379, scope: 'screeps-local' })
+const ps = new NRP({
+  host: config.redis.host,
+  port: config.redis.port,
+  scope: config.redis.scope,
+})
 const db = require('./db')
 
 console.log('Creating core')
-let core = new Core(100)
+const core = new Core(100)
 
 console.log('Initializing engine')
-console.log('setupMain', core.setupMain())
-console.log('setupRunner', core.setupRunner())
-console.log('setupProcessor', core.setupProcessor())
+switch(process.argv[2]){
+  case 'main':
+    console.log('setupMain', core.setupMain());
+    break;
+  case 'runner':
+    console.log('setupRunner', core.setupRunner())
+    break;
+  case 'processor':
+    console.log('setupProcessor', core.setupProcessor())
+    break;
+  default:
+    console.log('setupMain', core.setupMain());
+    console.log('setupRunner', core.setupRunner())
+    console.log('setupProcessor', core.setupProcessor())
+}
 console.log('Engine started')
 
 let lastTick = Date.now()

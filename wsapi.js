@@ -1,3 +1,4 @@
+const config = require('./config')
 const dbs = require('./db')
 const jwt = require('jsonwebtoken')
 const NRP = require('node-redis-pubsub')
@@ -9,9 +10,10 @@ let core = new Core(1000)
 class API {
   constructor (conn, bus) {
     this.ps = new NRP({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379,
-    scope: 'screeps-local' })
+      host: config.redis.host,
+      port: config.redis.port,
+      scope: config.redis.scope,
+    })
     this.conn = conn
     this.bus = bus
     this.bus.on('room-update', d => {

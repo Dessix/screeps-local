@@ -1,7 +1,9 @@
 module.exports = {
   jwtsecret: 'screeps-secret', // Change this to secure your logins
   redis: {
-    // TODO: Actually use this!
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    scope: process.env.REDIS_SCOPE || 'screeps-local',
   },
   mongo: {
     uri: process.env.MONGO_URI || 'localhost/screeps-local'

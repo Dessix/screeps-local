@@ -1,3 +1,4 @@
+const config = require('../../config.js')
 const _ = require('lodash')
 const Q = require('q')
 const vm = require('vm')
@@ -22,7 +23,11 @@ const utils = require('../.engine/utils.js')
 class Core extends EventEmitter {
   constructor (tickPeriod = 1000) {
     super()
-    this.ps = new NRP({ port: 6379, scope: 'screeps-local' })
+    this.ps = new NRP({
+      host: config.redis.host,
+      port: config.redis.port,
+      scope: config.redis.scope,
+    })
     this.queue = require('./Queue')
     this.history = require('../.engine/core/history')
     this.pathFinder = require('../.engine/core/path-finder')
