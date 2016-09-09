@@ -1,3 +1,4 @@
+const config = require('./config.js')
 const Q = require('q')
 // Q.___reject = Q.reject
 // Q.reject = function (...a) {
